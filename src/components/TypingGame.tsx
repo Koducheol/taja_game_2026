@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Heart, Volume2, VolumeX, Shield, Play, RotateCcw, AlertTriangle, ArrowLeft, Star, Lightbulb, Check, Trophy } from "lucide-react";
+import { Heart, Volume2, VolumeX, Shield, Play, RotateCcw, AlertTriangle, ArrowLeft, Star, Lightbulb, Check, Trophy, Rocket, Crosshair, Zap, Cpu } from "lucide-react";
 import { WordTerm, GameWord, Difficulty, GameStats } from "../types";
 import { playSuccessSound, playComboSound, playLevelUpSound, playErrorSound, playLaserSound, playExplosionSound } from "../utils/audio";
 
@@ -83,6 +83,11 @@ export default function TypingGame({ config, words, onFinishGame, onExit }: Typi
   const animationFrameRef = useRef<number | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  
+  const healthRef = useRef(health);
+  useEffect(() => {
+    healthRef.current = health;
+  }, [health]);
 
   // Setup/Filtered pool of words for the game
   const gamePool = useRef<WordTerm[]>([]);
@@ -229,7 +234,8 @@ export default function TypingGame({ config, words, onFinishGame, onExit }: Typi
     if (!gameActive || isPaused) return;
 
     const tickRate = 50; // 50ms game ticks
-    const spawnRate = settings.spawnInterval;
+    // Spawning interval scales faster as level increases (8% speed increase/shorter interval per level, not lower than 1000ms)
+    const spawnRate = Math.max(1000, settings.spawnInterval * Math.pow(0.92, level - 1));
 
     // Word Falling Loop
     const fallInterval = setInterval(() => {
@@ -282,7 +288,9 @@ export default function TypingGame({ config, words, onFinishGame, onExit }: Typi
         // Generate a random visual horizontal percentage (15% to 80%) to fit nicely within boundaries
         const xPos = 15 + Math.random() * 65;
 
-        const isBonusChance = Math.random() < 0.15; // 15% chance for a heart bonus
+        // Spawn bonus heart words ONLY when health is not full (some hearts are empty)
+        const canSpawnBonus = healthRef.current < 5;
+        const isBonusChance = canSpawnBonus && Math.random() < 0.15; // 15% chance for a heart bonus when health is < 5
 
         const newGameWord: GameWord = {
           ...randomTerm,
@@ -419,10 +427,15 @@ export default function TypingGame({ config, words, onFinishGame, onExit }: Typi
       setHealth((h) => Math.min(5, h + 1));
     }
 
+    const nextCorrectCount = correctCount + 1;
+
     setScore((s) => {
       const nextScore = s + addedScore;
-      // Level Up Threshold: Every 600 points triggers a level up!
-      const nextLevel = Math.floor(nextScore / 600) + 1;
+      // Level Up Threshold: Every 600 points OR every 10 correct words triggers a level up!
+      const levelFromScore = Math.floor(nextScore / 600) + 1;
+      const levelFromCount = Math.floor(nextCorrectCount / 10) + 1;
+      const nextLevel = Math.max(levelFromScore, levelFromCount);
+      
       if (nextLevel > level) {
         setLevel(nextLevel);
         triggerAudio("levelup");
@@ -431,7 +444,7 @@ export default function TypingGame({ config, words, onFinishGame, onExit }: Typi
     });
 
     // 3. Increment counters
-    setCorrectCount((c) => c + 1);
+    setCorrectCount(nextCorrectCount);
     setTotalCount((t) => t + 1);
     setTotalCharsTyped((prev) => prev + matched.word.length);
     setCorrectTerms((prev) => {
@@ -614,7 +627,6 @@ export default function TypingGame({ config, words, onFinishGame, onExit }: Typi
           <div className="absolute inset-0 animate-twinkle opacity-30" style={{ animationDelay: "2s", backgroundImage: "radial-gradient(1px 1px at 10px 110px, #ffffff, rgba(0,0,0,0)), radial-gradient(1px 1px at 180px 20px, #ffffff, rgba(0,0,0,0)), radial-gradient(1.5px 1.5px at 80px 190px, #ffffff, rgba(0,0,0,0))", backgroundSize: "300px 300px" }} />
           
           {/* Animated Asteroids and Shooting Stars */}
-          <div className="absolute top-0 left-0 text-4xl animate-asteroid-1 opacity-60 text-slate-500 drop-shadow-md mix-blend-screen blur-[1px]">☄️</div>
           <div className="absolute top-0 right-0 text-5xl animate-asteroid-2 opacity-40 text-slate-600 drop-shadow-lg mix-blend-screen blur-[2px]">🌑</div>
           <div className="absolute top-1/4 left-1/4 text-2xl animate-asteroid-3 opacity-50 text-slate-500 drop-shadow-sm mix-blend-screen blur-[1px]">🪐</div>
           
@@ -679,9 +691,12 @@ export default function TypingGame({ config, words, onFinishGame, onExit }: Typi
           );
         })}
 
-        {/* Warning zone highlight at the bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-8 bg-rose-500/20 border-t border-rose-500/50 z-0 pointer-events-none flex items-center justify-center">
-          <span className="text-[10px] text-rose-300 font-extrabold tracking-widest opacity-80 uppercase drop-shadow-md">대기권 진입 경계 ⚠️</span>
+        {/* Warning zone highlight at the bottom - Now Beautiful Blue Atmosphere Shield */}
+        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-sky-500/30 via-sky-500/10 to-transparent border-t-2 border-sky-400/60 z-0 pointer-events-none flex items-center justify-center shadow-[0_-8px_20px_rgba(56,189,248,0.25)]">
+          <span className="text-[10px] text-sky-200 font-extrabold tracking-widest opacity-90 uppercase drop-shadow-[0_0_5px_rgba(56,189,248,0.8)] flex items-center gap-1.5 animate-pulse">
+            <Shield className="w-3.5 h-3.5 text-sky-400 fill-sky-400/20" />
+            푸른 대기권 방어 보호막 활성화 중 🛡️
+          </span>
         </div>
 
         {/* Empty board state */}
@@ -731,26 +746,89 @@ export default function TypingGame({ config, words, onFinishGame, onExit }: Typi
         )}
       </div>
 
-      {/* Bottom Keyboard input panel */}
-      <div className="bg-white p-4 rounded-2xl shadow-md border border-slate-100 flex items-center gap-3 z-20 mb-2">
-        <input
-          id="typing-input-field"
-          ref={inputRef}
-          type="text"
-          value={inputText}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          disabled={!gameActive || isPaused}
-          placeholder={isPaused ? "일시 정지 중입니다." : "단어를 입력하고 엔터나 스페이스바를 누르세요!"}
-          className="flex-1 px-5 py-3.5 rounded-xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-indigo-500 outline-hidden transition-all text-slate-800 font-extrabold text-lg placeholder:text-slate-400 placeholder:text-sm text-center"
-          autoComplete="off"
-          autoFocus
-        />
+      {/* Spaceship Cockpit Control Console */}
+      <div className={`relative p-5 rounded-2xl shadow-lg border-2 flex flex-col md:flex-row items-center gap-4 z-20 mb-2 overflow-hidden transition-all duration-300 ${
+        inputText.length > 0 
+          ? "bg-slate-900 border-cyan-500/80 shadow-[0_0_25px_rgba(6,182,212,0.3)]" 
+          : "bg-slate-950 border-indigo-500/40 shadow-[0_0_15px_rgba(99,102,241,0.15)]"
+      }`}>
+        {/* Futuristic digital grid background */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.07] bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]"></div>
         
-        {/* Cute small lock screen info */}
-        <div className="hidden md:flex items-center gap-1.5 text-xs text-slate-400 font-bold border-l pl-3 shrink-0">
-          <Shield className="w-4 h-4 text-emerald-500" />
-          <span>키보드 포커스 잠금</span>
+        {/* Left Side: Spaceship Visuals & Engines */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="relative">
+            {/* Thruster flame glow when typing */}
+            {inputText.length > 0 && (
+              <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-4.5 h-7 bg-gradient-to-t from-orange-600 via-amber-400 to-transparent rounded-full blur-[2px] animate-pulse"></div>
+            )}
+            <div className={`p-3 rounded-xl border flex items-center justify-center transition-all duration-300 ${
+              inputText.length > 0
+                ? "bg-cyan-950/80 border-cyan-400 text-cyan-400 scale-105 shadow-[0_0_15px_rgba(34,211,238,0.4)] animate-engine-rumble"
+                : "bg-slate-900/90 border-slate-700 text-slate-500"
+            }`}>
+              <Rocket className="w-6 h-6" />
+            </div>
+          </div>
+          
+          <div className="hidden sm:block text-left">
+            <div className={`text-[9px] font-black tracking-widest uppercase transition-colors duration-300 ${
+              inputText.length > 0 ? "text-cyan-400" : "text-slate-500"
+            }`}>
+              {inputText.length > 0 ? "⚡ ENGINE ACTIVE" : "🛰️ COCKPIT STANDBY"}
+            </div>
+            <div className="text-[11px] text-slate-400 font-extrabold flex items-center gap-1.5 mt-0.5">
+              <span className={`w-2 h-2 rounded-full inline-block ${inputText.length > 0 ? "bg-cyan-400 animate-ping" : "bg-emerald-500"}`}></span>
+              {inputText.length > 0 ? `출력 ${Math.min(100, 30 + inputText.length * 15)}%` : "대기 모드"}
+            </div>
+          </div>
+        </div>
+
+        {/* Center: Targeting input console computer */}
+        <div className="flex-1 w-full relative">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+            <Crosshair className={`w-5 h-5 transition-colors duration-300 ${
+              inputText.length > 0 ? "text-cyan-400 animate-spin-slow" : "text-slate-500"
+            }`} />
+          </div>
+          
+          <input
+            id="typing-input-field"
+            ref={inputRef}
+            type="text"
+            value={inputText}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            disabled={!gameActive || isPaused}
+            placeholder={isPaused ? "일시 정지 중입니다." : "여기에 타자를 치고 엔터나 스페이스를 누르세요!"}
+            className={`w-full pl-11 pr-5 py-3.5 rounded-xl border-2 font-extrabold text-lg transition-all duration-300 text-center tracking-wide outline-hidden ${
+              inputText.length > 0
+                ? "bg-cyan-950/40 border-cyan-400 text-cyan-200 placeholder:text-cyan-700/50 shadow-[inset_0_2px_8px_rgba(6,182,212,0.15)]"
+                : "bg-slate-900/60 border-slate-800 text-slate-300 placeholder:text-slate-500 focus:border-indigo-500 focus:bg-slate-900 focus:text-white"
+            }`}
+            autoComplete="off"
+            autoFocus
+          />
+
+          {/* Futuristic bottom light bar */}
+          <div className={`absolute bottom-0 inset-x-4 h-[2px] blur-[0.5px] transition-all duration-300 ${
+            inputText.length > 0 ? "bg-cyan-400 scale-x-100" : "bg-transparent scale-x-50"
+          }`}></div>
+        </div>
+
+        {/* Right Side: Telemetry / Focus display */}
+        <div className="hidden md:flex items-center gap-4 border-l border-slate-800 pl-4 shrink-0 text-left">
+          <div className="space-y-1">
+            <div className="text-[9px] text-slate-500 font-black tracking-wider uppercase">SYSTEMS STATUS</div>
+            <div className="flex items-center gap-2">
+              <div className="bg-slate-900/80 border border-slate-800 px-2 py-0.5 rounded text-[10px] font-mono font-bold text-indigo-400 flex items-center gap-1 select-none">
+                <Cpu className="w-3 h-3" /> APU: ON
+              </div>
+              <div className="bg-slate-900/80 border border-slate-800 px-2 py-0.5 rounded text-[10px] font-mono font-bold text-cyan-400 flex items-center gap-1 select-none">
+                <Zap className="w-3 h-3" /> WEAPON: OK
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
