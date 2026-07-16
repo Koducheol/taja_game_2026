@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Nunito", "Fredoka", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fredoka", "Nunito", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-pop: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --animate-twinkle: twinkle 3s ease-in-out infinite;
+  --animate-asteroid-1: asteroid-fly-1 25s linear infinite;
+  --animate-asteroid-2: asteroid-fly-2 35s linear infinite;
+  --animate-asteroid-3: asteroid-fly-3 45s linear infinite;
+  --animate-shooting-star: shooting-star 12s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes asteroid-fly-1 {
+  0% { transform: translate(-150px, -50px) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translate(120vw, 80vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes asteroid-fly-2 {
+  0% { transform: translate(120vw, -100px) rotate(0deg) scale(0.7); opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.5; }
+  100% { transform: translate(-20vw, 90vh) rotate(-200deg) scale(0.7); opacity: 0; }
+}
+
+@keyframes asteroid-fly-3 {
+  0% { transform: translate(30vw, -150px) rotate(0deg) scale(0.4); opacity: 0; }
+  10% { opacity: 0.4; }
+  90% { opacity: 0.4; }
+  100% { transform: translate(-30vw, 110vh) rotate(180deg) scale(0.4); opacity: 0; }
+}
+
+@keyframes shooting-star {
+  0% { transform: translate(120vw, -100px) rotate(-45deg) scale(0); opacity: 0; }
+  5% { opacity: 1; transform: translate(110vw, -80px) rotate(-45deg) scale(1.5); }
+  15% { transform: translate(-20vw, 120vh) rotate(-45deg) scale(0.5); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Custom styles for our kinetic minimalist canvas */
+body {
+  background-color: #f7fafc;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Scrollbar styles for modern look */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

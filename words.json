@@ -1,0 +1,122 @@
+[
+  {
+    "id": "custom-1783753969629-1",
+    "word": "민주주의",
+    "description": "국민이 주인이 되어 권리를 행사는 정치 제도",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-2",
+    "word": "독재정치",
+    "description": "1인이나 소수가 모든 권력을 쥐고 마음대로 하는 정치",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-3",
+    "word": "박정희",
+    "description": "우리나라 제5~9대 대통령",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-4",
+    "word": "이승만",
+    "description": "우리나라 초대 대통령",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-5",
+    "word": "투표",
+    "description": "선거 등에서 의사를 표시하기 위해 표를 던지는 행위",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-6",
+    "word": "직접선거",
+    "description": "선거권자가 중간 선거인을 거치지 않고 직접 대표를 선출하는 선거",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-7",
+    "word": "비밀선거",
+    "description": "투표한 내용을 다른 사람이 알지 못하도록 비밀을 보장하는 선거",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-8",
+    "word": "교류",
+    "description": "서로 왕래하며 물질, 문화, 사상 등을 주고받는 것",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-9",
+    "word": "상호의존",
+    "description": "둘 이상의 개인, 집단, 국가가 서로 돕고 의지하는 상태",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-10",
+    "word": "개념",
+    "description": "어떤 사물이나 현상에 대한 일반적인 생각이나 표현",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-11",
+    "word": "문장",
+    "description": "생각이나 감정을 말이나 글로 완전하게 나타낸 최소 단위",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-12",
+    "word": "진술",
+    "description": "자신의 의견이나 사실을 자세하게 말하는 일",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-13",
+    "word": "자원",
+    "description": "인간의 생활에 유용하게 쓰이는 자연물이나 능력",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-14",
+    "word": "생산과소비",
+    "description": "필요한 물건을 만들고(생산) 사용하는(소비) 일련의 경제 행위",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  },
+  {
+    "id": "custom-1783753969629-15",
+    "word": "핵심아이디어",
+    "description": "가장 핵심적이고 중요한 생각이나 가치",
+    "subject": "사회",
+    "grade": "공통",
+    "chapter": "사회"
+  }
+]

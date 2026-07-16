@@ -1,0 +1,6 @@
+{
+  "name": "'생각솔솔~' 타자게임",
+  "description": "초등학생들이 교과서 용어를 재미있게 배울 수 있는 감각적인 Kinetic Minimalism 스타일의 에듀테크 타자 학습 게임입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
