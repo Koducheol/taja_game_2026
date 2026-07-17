@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { BookOpen, GraduationCap, Flame, Play, Settings, GraduationCap as TeacherIcon, Sparkles, Trophy, Award, Zap, Clock } from "lucide-react";
 import { Difficulty, WordTerm } from "../types";
+import { clientFetchScores } from "../utils/dataClient";
 
 interface LeaderboardRecord {
   id?: string;
@@ -54,33 +55,30 @@ export default function MainMenu({ onStartGame, words = [] }: MainMenuProps) {
 
       // 2. Load from server database (supports GAS synchronization)
       try {
-        const response = await fetch("/api/scores");
-        if (response.ok) {
-          const data = await response.json();
-          if (data && Array.isArray(data.scores)) {
-            const serverScores: LeaderboardRecord[] = data.scores.map((s: any) => ({
-              id: s.id,
-              nickname: s.nickname,
-              score: s.score,
-              level: s.level,
-              wpm: s.wpm,
-              accuracy: s.accuracy,
-              subject: s.subject || "전체",
-              grade: s.grade || "전체",
-              difficulty: s.difficulty || "medium",
-              date: s.timestamp ? new Date(s.timestamp).toLocaleDateString("ko-KR", { month: "short", day: "numeric" }) : ""
-            }));
+        const data = await clientFetchScores();
+        if (data && Array.isArray(data.scores)) {
+          const serverScores: LeaderboardRecord[] = data.scores.map((s: any) => ({
+            id: s.id,
+            nickname: s.nickname,
+            score: Number(s.score || 0),
+            level: Number(s.level || 1),
+            wpm: Number(s.wpm || 0),
+            accuracy: Number(s.accuracy || 0),
+            subject: s.subject || "전체",
+            grade: s.grade || "전체",
+            difficulty: s.difficulty || "medium",
+            date: s.timestamp ? new Date(s.timestamp).toLocaleDateString("ko-KR", { month: "short", day: "numeric" }) : ""
+          }));
 
-            // Merge server scores with local storage, avoiding duplicate records
-            const existingKeys = new Set(combined.map(item => `${item.nickname}-${item.score}-${item.subject}`));
-            serverScores.forEach(s => {
-              const key = `${s.nickname}-${s.score}-${s.subject}`;
-              if (!existingKeys.has(key)) {
-                combined.push(s);
-                existingKeys.add(key);
-              }
-            });
-          }
+          // Merge server scores with local storage, avoiding duplicate records
+          const existingKeys = new Set(combined.map(item => `${item.nickname}-${item.score}-${item.subject}`));
+          serverScores.forEach(s => {
+            const key = `${s.nickname}-${s.score}-${s.subject}`;
+            if (!existingKeys.has(key)) {
+              combined.push(s);
+              existingKeys.add(key);
+            }
+          });
         }
       } catch (e) {
         console.error("Server leaderboard fetch error", e);

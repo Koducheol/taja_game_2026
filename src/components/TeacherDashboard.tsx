@@ -4,6 +4,15 @@ import {
   BookOpen, ChevronLeft, Database, Info, RefreshCw, AlertCircle
 } from "lucide-react";
 import { WordTerm } from "../types";
+import { 
+  getGasUrl, 
+  saveGasUrl, 
+  clientFetchScores, 
+  clientAddWord, 
+  clientEditWord, 
+  clientDeleteWord, 
+  getGasTemplateCode 
+} from "../utils/dataClient";
 
 interface TeacherDashboardProps {
   onClose: () => void;
@@ -50,36 +59,33 @@ export default function TeacherDashboard({ onClose, words, onRefreshWords }: Tea
   const [loadingScores, setLoadingScores] = useState(false);
 
   useEffect(() => {
-    // Load config
-    fetch("/api/config")
+    // Load config from client data helper
+    const activeUrl = getGasUrl();
+    setGasUrl(activeUrl);
+    setOriginalGasUrl(activeUrl);
+
+    // Also attempt loading config from backend if it exists
+    fetch("/.netlify/functions/config")
       .then((res) => res.json())
       .then((data) => {
         if (data.gasUrl) {
           setGasUrl(data.gasUrl);
           setOriginalGasUrl(data.gasUrl);
+          saveGasUrl(data.gasUrl);
         }
       })
-      .catch((err) => console.error("Error loading config:", err));
+      .catch((err) => console.log("Backend config load bypassed, using client config:", err));
 
-    // Load GAS template
-    fetch("/api/gas-template")
-      .then((res) => res.text())
-      .then((text) => setGasTemplate(text))
-      .catch((err) => console.error("Error loading GAS template:", err));
+    // Load GAS template statically from client helper
+    setGasTemplate(getGasTemplateCode());
   }, []);
 
   const fetchScores = async () => {
     setLoadingScores(true);
     try {
-      const res = await fetch("/api/scores");
-      if (res.ok) {
-        const data = await res.json();
-        // Support both backend payload formats
-        if (data && Array.isArray(data.scores)) {
-          setScores(data.scores);
-        } else if (Array.isArray(data)) {
-          setScores(data);
-        }
+      const data = await clientFetchScores();
+      if (data && Array.isArray(data.scores)) {
+        setScores(data.scores);
       }
     } catch (e) {
       console.error("Failed to load scores:", e);
@@ -107,21 +113,21 @@ export default function TeacherDashboard({ onClose, words, onRefreshWords }: Tea
     setSuccessMsg("");
 
     try {
-      const res = await fetch("/api/config", {
+      const trimmedUrl = gasUrl.trim();
+      saveGasUrl(trimmedUrl);
+      setOriginalGasUrl(trimmedUrl);
+      setSuccessMsg("구글 스프레드시트 GAS 연동 URL이 브라우저와 클라이언트에 안전하게 저장되었습니다! 🚀");
+      
+      // Also sync with server if present
+      fetch("/.netlify/functions/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gasUrl: gasUrl.trim() }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSuccessMsg("구글 스프레드시트 GAS 연동 URL이 안전하게 저장되었습니다! 🚀");
-        setOriginalGasUrl(gasUrl.trim());
-        await onRefreshWords(); // Reload words from newly set GAS Web App
-      } else {
-        setErrorMsg(data.error || "설정 저장에 실패했습니다.");
-      }
+        body: JSON.stringify({ gasUrl: trimmedUrl }),
+      }).catch(() => {});
+
+      await onRefreshWords(); // Reload words from newly set GAS Web App
     } catch (err) {
-      setErrorMsg("서버 통신 실패. 연동 URL을 확인해 주세요.");
+      setErrorMsg("연동 URL 저장 도중 오류가 발생했습니다.");
     } finally {
       setGasSaving(false);
     }
@@ -139,30 +145,25 @@ export default function TeacherDashboard({ onClose, words, onRefreshWords }: Tea
     setSuccessMsg("");
 
     try {
-      const res = await fetch("/api/words", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          word: formWord.trim(),
-          description: formDescription.trim() || "뜻풀이 없음",
-          subject: formSubject.trim(),
-          grade: "공통",
-          chapter: formSubject.trim()
-        }),
+      const result = await clientAddWord({
+        word: formWord.trim(),
+        description: formDescription.trim() || "뜻풀이 없음",
+        subject: formSubject.trim(),
+        grade: "공통",
+        chapter: formSubject.trim()
       });
 
-      if (res.ok) {
+      if (result.success) {
         setSuccessMsg("새로운 교과 용어가 추가되었습니다! 🎈");
         setFormWord("");
         setFormDescription("");
         setShowAddForm(false);
         await onRefreshWords();
       } else {
-        const data = await res.json();
-        setErrorMsg(data.error || "용어 추가에 실패했습니다.");
+        setErrorMsg(result.error || "용어 추가에 실패했습니다.");
       }
     } catch (err) {
-      setErrorMsg("단어 저장 도중 통신 오류가 발생했습니다.");
+      setErrorMsg("단어 저장 도중 오류가 발생했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -189,28 +190,23 @@ export default function TeacherDashboard({ onClose, words, onRefreshWords }: Tea
     setSuccessMsg("");
 
     try {
-      const res = await fetch(`/api/words/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          word: formWord.trim(),
-          description: formDescription.trim() || "뜻풀이 없음",
-          subject: formSubject.trim(),
-          grade: formGrade || "공통",
-          chapter: formSubject.trim()
-        }),
+      const result = await clientEditWord(id, {
+        word: formWord.trim(),
+        description: formDescription.trim() || "뜻풀이 없음",
+        subject: formSubject.trim(),
+        grade: formGrade || "공통",
+        chapter: formSubject.trim()
       });
 
-      if (res.ok) {
+      if (result.success) {
         setSuccessMsg("용어가 성공적으로 수정되었습니다! ✍️");
         setIsEditing(null);
         await onRefreshWords();
       } else {
-        const data = await res.json();
-        setErrorMsg(data.error || "용어 수정 실패");
+        setErrorMsg(result.error || "용어 수정 실패");
       }
     } catch (err) {
-      setErrorMsg("통신 오류로 용어를 수정하지 못했습니다.");
+      setErrorMsg("오류로 용어를 수정하지 못했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -221,19 +217,15 @@ export default function TeacherDashboard({ onClose, words, onRefreshWords }: Tea
     setSuccessMsg("");
 
     try {
-      const res = await fetch(`/api/words/${id}`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
+      const result = await clientDeleteWord(id);
+      if (result.success) {
         setSuccessMsg("용어가 성공적으로 삭제되었습니다! 🗑️");
         await onRefreshWords();
       } else {
-        const data = await res.json();
-        setErrorMsg(data.error || "용어 삭제 실패");
+        setErrorMsg("용어 삭제 실패");
       }
     } catch (err) {
-      setErrorMsg("삭제 도중 통신 오류가 발생했습니다.");
+      setErrorMsg("삭제 도중 오류가 발생했습니다.");
     }
   };
 

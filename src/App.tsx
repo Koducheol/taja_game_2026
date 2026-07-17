@@ -5,6 +5,7 @@ import ResultsModal from "./components/ResultsModal";
 import TeacherDashboard from "./components/TeacherDashboard";
 import { WordTerm, Difficulty, GameStats } from "./types";
 import { GraduationCap, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
+import { clientFetchWords, clientSaveScore } from "./utils/dataClient";
 
 type Screen = "menu" | "game" | "results" | "teacher";
 
@@ -82,16 +83,12 @@ export default function App() {
     return sanitized;
   };
 
-  // Fetch words from backend Express API
+  // Fetch words from backend Express API or fallback client storage
   const fetchWords = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/words");
-      if (!response.ok) {
-        throw new Error("서버에서 단어 정보를 가져오지 못했습니다.");
-      }
-      const data = await response.json();
+      const data = await clientFetchWords();
       if (data && Array.isArray(data.words)) {
         setWords(sanitizeWords(data.words));
       } else {
@@ -123,22 +120,16 @@ export default function App() {
     setFinishedStats(stats);
     setCorrectTerms(correct);
     
-    // Save nickname, score and results to the server
-    fetch("/api/scores", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        nickname: gameConfig.nickname,
-        score: stats.score,
-        level: stats.level,
-        wpm: stats.wpm,
-        accuracy: stats.accuracy,
-        grade: gameConfig.grade,
-        subject: gameConfig.subject,
-        difficulty: gameConfig.difficulty,
-      }),
+    // Save nickname, score and results using the dynamic client
+    clientSaveScore({
+      nickname: gameConfig.nickname,
+      score: stats.score,
+      level: stats.level,
+      wpm: stats.wpm,
+      accuracy: stats.accuracy,
+      grade: gameConfig.grade,
+      subject: gameConfig.subject,
+      difficulty: gameConfig.difficulty,
     }).catch((err) => console.error("Score submission error:", err));
 
     setActiveScreen("results");
